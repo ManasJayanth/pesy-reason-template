@@ -257,6 +257,7 @@ curl(getDefinitionIDUrl)
       if (zipFileChecksum === expectedChecksum) {
         fs.renameSync(cacheZip, `${artName}.zip`);
         fs.renameSync(checksumTxt, `${artChecksum}.txt`);
+        console.log(">>>>>>", process.env.GITHUB_TOKEN);
         const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
         return octokit.repos
           .getReleaseByTag({
