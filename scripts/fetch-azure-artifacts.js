@@ -266,6 +266,10 @@ curl(getDefinitionIDUrl)
           })
           .then((response) => {
             let { upload_url } = response;
+	    let assetContentType = "application/zip";
+	    let assetPath = `${artChecksum}.txt`;
+	    const contentLength = filePath => fs.statSync(filePath).size;
+	    const headers = { 'content-type': assetContentType, 'content-length': contentLength(assetPath) };
             console.log("Uploading...");
             octokit.repos
               .uploadReleaseAsset({
