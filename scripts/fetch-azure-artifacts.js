@@ -1,13 +1,16 @@
+const { GitHub } = require("@actions/github");
 const https = require("https");
 const url = require("url");
 const path = require("path");
 const fs = require("fs");
 const childProcess = require("child_process");
 const crypto = require("crypto");
+const pesyConfig = require("./package.json").pesy;
 
-let restBase = "https://dev.azure.com/esy-dev";
-let proj = "esy";
+let githubRef = process.env.GITHUB_REF;
+let githubRepository = process.env.GITHUB_REPOSITORY; // contains org too. Eg octocat/Hello Ref: https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
 
+let restBase = `https://dev.azure.com/${pesyConfig["azure-project"]}`;
 let os = "";
 
 switch (process.platform) {
@@ -32,26 +35,34 @@ let branch = `${prefix}master`;
 let filter = `deletedFilter=excludeDeleted&statusFilter=completed`; //&resultFilter=succeeded`;
 let latest = "finishTimeDescending&$top=1";
 let definition = "esy.pesy-reason-template";
-let getDefinitionIDUrl = `${restBase}/${proj}/_apis/build/definitions?name=${definition}&api-version=4.1`;
+let getDefinitionIDUrl = `${restBase}/_apis/build/definitions?name=${definition}&api-version=4.1`;
 
 // To disambiguate cached artifacts based on github project name. Because it's possible that more than one repo
 // is tied to the same project on Azure
 
-function curl(url) {
+function curl(urlStr, data) {
   // console.log("DEBUG", url);
   return new Promise(function (resolve, reject) {
-    https.get(url, function (response) {
-      let buffer = "";
-      response.on("data", function (chunk) {
-        buffer += chunk;
-      });
-      response.on("end", function () {
-        resolve(JSON.parse(buffer));
-      });
-      response.on("error", function (error) {
-        reject(error);
-      });
-    });
+    let request = https.request(
+      url.parse(urlStr),
+      { method: data ? "POST" : "GET" },
+      function (response) {
+        let buffer = "";
+        response.on("data", function (chunk) {
+          buffer += chunk;
+        });
+        response.on("end", function () {
+          resolve(JSON.parse(buffer));
+        });
+        response.on("error", function (error) {
+          reject(error);
+        });
+      }
+    );
+    if (data) {
+      request.write(data);
+    }
+    request.end();
   });
 }
 
@@ -176,7 +187,7 @@ curl(getDefinitionIDUrl)
         value: [{ id: defintionID }],
       } = response;
       return curl(
-        `${restBase}/${proj}/_apis/build/builds?${filter}&${branch}&${latest}&definitions=${defintionID}&api-version=4.1`
+        `${restBase}/_apis/build/builds?${filter}&${branch}&${latest}&definitions=${defintionID}&api-version=4.1`
       );
     }
   })
@@ -190,10 +201,10 @@ curl(getDefinitionIDUrl)
       console.log("Downloading ", artName);
       return Promise.all([
         curl(
-          `${restBase}/${proj}/_apis/build/builds/${buildID}/artifacts?artifactName=${artName}&api-version=4.1`
+          `${restBase}/_apis/build/builds/${buildID}/artifacts?artifactName=${artName}&api-version=4.1`
         ),
         curl(
-          `${restBase}/${proj}/_apis/build/builds/${buildID}/artifacts?artifactName=${artChecksum}&api-version=4.1`
+          `${restBase}/_apis/build/builds/${buildID}/artifacts?artifactName=${artChecksum}&api-version=4.1`
         ),
       ]);
     }
@@ -243,6 +254,25 @@ curl(getDefinitionIDUrl)
       if (zipFileChecksum === expectedChecksum) {
         fs.renameSync(cacheZip, `${artName}.zip`);
         fs.renameSync(checksumTxt, `${artChecksum}.txt`);
+        curl(
+          `https://api.github.com/repos/${githubRepository}/releases/tags/${githubRef}`
+        ).then((response) => {
+          let { upload_url } = response;
+          console.log("Uploading...");
+          const github = new GitHub(process.env.GITHUB_TOKEN);
+          github.repos
+            .uploadReleaseAsset({
+              url: upload_url,
+              headers,
+              name: artChecksum,
+              file: fs.readFileSync(`${artChecksum}.txt`),
+            })
+            .then((uploadAssetResponse) => {});
+        });
+        const {
+          data: { browser_download_url: browserDownloadUrl },
+        } = uploadAssetResponse;
+        console.log(browserDownloadUrl);
       } else {
         console.log("Checksum mismatch");
         process.exit(-1);

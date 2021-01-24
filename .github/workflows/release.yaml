@@ -19,9 +19,3 @@ jobs:
     - name: Download cache from Azure
       run: node scripts/fetch-azure-artifacts.js
       shell: bash
-    - uses: actions/upload-artifact@v2
-      with:
-        name: release
-        path: |
-          *.txt
-          *.zip
