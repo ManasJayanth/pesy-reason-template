@@ -5,7 +5,7 @@ const path = require("path");
 const fs = require("fs");
 const childProcess = require("child_process");
 const crypto = require("crypto");
-const pesyConfig = require("./package.json").pesy;
+const pesyConfig = require("../package.json").pesy;
 
 let githubRef = process.env.GITHUB_REF;
 let githubRepository = process.env.GITHUB_REPOSITORY; // contains org too. Eg octocat/Hello Ref: https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
