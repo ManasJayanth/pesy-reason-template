@@ -258,7 +258,12 @@ curl(getDefinitionIDUrl)
         curl(
           `https://api.github.com/repos/${githubRepository}/releases/tags/${githubRef}`,
           null,
-          { headers: { Accept: "application/vnd.github.v3+json" } }
+          {
+            headers: {
+              "User-Agent": "pesy-reason-template",
+              Accept: "application/vnd.github.v3+json",
+            },
+          }
         ).then((response) => {
           let { upload_url } = response;
           console.log("Uploading...");
