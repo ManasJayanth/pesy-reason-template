@@ -1,4 +1,4 @@
-const { GitHub } = require("@actions/github");
+const github = require("@actions/github");
 const https = require("https");
 const url = require("url");
 const path = require("path");
@@ -257,8 +257,8 @@ curl(getDefinitionIDUrl)
       if (zipFileChecksum === expectedChecksum) {
         fs.renameSync(cacheZip, `${artName}.zip`);
         fs.renameSync(checksumTxt, `${artChecksum}.txt`);
-        const github = new GitHub(process.env.GITHUB_TOKEN);
-        return github.repos
+        const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+        return octokit.repos
           .getReleaseByTag({
             owner,
             repo,
@@ -267,7 +267,7 @@ curl(getDefinitionIDUrl)
           .then((response) => {
             let { upload_url } = response;
             console.log("Uploading...");
-            github.repos
+            octokit.repos
               .uploadReleaseAsset({
                 url: upload_url,
                 headers,
