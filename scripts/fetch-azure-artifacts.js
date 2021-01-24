@@ -282,7 +282,7 @@ curl(getDefinitionIDUrl)
                 url: upload_url,
                 headers,
                 name: artChecksum,
-                file: fs.readFileSync(`${artChecksum}.txt`),
+                data: fs.readFileSync(`${artChecksum}.txt`),
               })
               .then((uploadAssetResponse) => {
                 const {
