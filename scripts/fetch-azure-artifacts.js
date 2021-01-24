@@ -272,7 +272,7 @@ curl(getDefinitionIDUrl)
             let { upload_url } = response.data;
 	    console.log(upload_url);
 	    console.log(response);
-	    let assetContentType = "application/zip";
+	    let assetContentType = "text/plain";
 	    let assetPath = `${artChecksum}.txt`;
 	    const contentLength = filePath => fs.statSync(filePath).size;
 	    const headers = { 'content-type': assetContentType, 'content-length': contentLength(assetPath) };
