@@ -1,0 +1,28 @@
+name: Prepare NPM tarball
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node_version: [14]
+        os: [macOS-latest, ubuntu-latest, windows-latest]
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node_version }}
+    - name: Download cache from Azure
+      run: node scripts/fetch-azure-artifacts.js
+      shell: bash
+    - uses: actions/upload-artifact@v2
+      with:
+        name: release
+        path: |
+
+          release/SHA1.txt
+          release/SHA512.txt
