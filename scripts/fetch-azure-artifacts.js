@@ -40,11 +40,13 @@ let getDefinitionIDUrl = `${restBase}/_apis/build/definitions?name=${definition}
 // To disambiguate cached artifacts based on github project name. Because it's possible that more than one repo
 // is tied to the same project on Azure
 
-function curl(urlStr, data) {
+function curl(urlStr, data, headers) {
   // console.log("DEBUG", url);
   return new Promise(function (resolve, reject) {
     let request = https.request(
-      Object.assign({}, url.parse(urlStr), { method: data ? "POST" : "GET" }),
+      Object.assign({}, url.parse(urlStr), headers ? { headers } : {}, {
+        method: data ? "POST" : "GET",
+      }),
       function (response) {
         let buffer = "";
         response.on("data", function (chunk) {
@@ -254,7 +256,9 @@ curl(getDefinitionIDUrl)
         fs.renameSync(cacheZip, `${artName}.zip`);
         fs.renameSync(checksumTxt, `${artChecksum}.txt`);
         curl(
-          `https://api.github.com/repos/${githubRepository}/releases/tags/${githubRef}`
+          `https://api.github.com/repos/${githubRepository}/releases/tags/${githubRef}`,
+          null,
+          { headers: { Accept: "application/vnd.github.v3+json" } }
         ).then((response) => {
           let { upload_url } = response;
           console.log("Uploading...");
