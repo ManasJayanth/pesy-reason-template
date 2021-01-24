@@ -1,5 +1,4 @@
 {
-  "name": "scripts",
   "dependencies": {
     "@actions/github": "*"
   }
