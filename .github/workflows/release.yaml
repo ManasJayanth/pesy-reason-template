@@ -20,8 +20,8 @@ jobs:
     - name: Setup scripts (yarn install)
       run: npm i
       working-directory: scripts
-      env:
-        TOKEN: ${{ secrets.TOKEN }}
     - name: Download cache from Azure
       run: node scripts/fetch-azure-artifacts.js
       shell: bash
+      env:
+        GITHUB_TOKEN: ${{ secrets.TOKEN }}
