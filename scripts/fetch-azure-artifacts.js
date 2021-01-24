@@ -262,7 +262,7 @@ curl(getDefinitionIDUrl)
           .getReleaseByTag({
             owner,
             repo,
-            tag: githubRef.replace('/refs/tags/', ''),
+            tag: githubRef.replace('refs/tags/', ''),
           })
           .then((response) => {
             let { upload_url } = response;
