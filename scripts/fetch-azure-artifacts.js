@@ -9,6 +9,7 @@ const pesyConfig = require("../package.json").pesy;
 
 let githubRef = process.env.GITHUB_REF;
 let githubRepository = process.env.GITHUB_REPOSITORY; // contains org too. Eg octocat/Hello Ref: https://docs.github.com/en/actions/reference/environment-variables#default-environment-variables
+let [owner, repo] = githubRepository.split("/");
 
 let restBase = `https://dev.azure.com/${pesyConfig["azure-project"]}`;
 let os = "";
@@ -256,33 +257,30 @@ curl(getDefinitionIDUrl)
       if (zipFileChecksum === expectedChecksum) {
         fs.renameSync(cacheZip, `${artName}.zip`);
         fs.renameSync(checksumTxt, `${artChecksum}.txt`);
-        curl(
-          `https://api.github.com/repos/${githubRepository}/releases/tags/${githubRef}`,
-          null,
-          {
-            headers: {
-              "User-Agent": "pesy-reason-template",
-              Accept: "application/vnd.github.v3+json",
-            },
-          }
-        ).then((response) => {
-          let { upload_url } = response;
-          console.log("Uploading...");
-          const github = new GitHub(process.env.GITHUB_TOKEN);
-          github.repos
-            .uploadReleaseAsset({
-              url: upload_url,
-              headers,
-              name: artChecksum,
-              file: fs.readFileSync(`${artChecksum}.txt`),
-            })
-            .then((uploadAssetResponse) => {
-              const {
-                data: { browser_download_url: browserDownloadUrl },
-              } = uploadAssetResponse;
-              console.log(browserDownloadUrl);
-            });
-        });
+        const github = new GitHub(process.env.GITHUB_TOKEN);
+        return github.repos
+          .getReleaseByTag({
+            owner,
+            repo,
+            tag: githubRef,
+          })
+          .then((response) => {
+            let { upload_url } = response;
+            console.log("Uploading...");
+            github.repos
+              .uploadReleaseAsset({
+                url: upload_url,
+                headers,
+                name: artChecksum,
+                file: fs.readFileSync(`${artChecksum}.txt`),
+              })
+              .then((uploadAssetResponse) => {
+                const {
+                  data: { browser_download_url: browserDownloadUrl },
+                } = uploadAssetResponse;
+                console.log(browserDownloadUrl);
+              });
+          });
       } else {
         console.log("Checksum mismatch");
         process.exit(-1);
