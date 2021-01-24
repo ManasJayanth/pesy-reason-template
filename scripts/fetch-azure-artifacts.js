@@ -266,12 +266,13 @@ curl(getDefinitionIDUrl)
               name: artChecksum,
               file: fs.readFileSync(`${artChecksum}.txt`),
             })
-            .then((uploadAssetResponse) => {});
+            .then((uploadAssetResponse) => {
+              const {
+                data: { browser_download_url: browserDownloadUrl },
+              } = uploadAssetResponse;
+              console.log(browserDownloadUrl);
+            });
         });
-        const {
-          data: { browser_download_url: browserDownloadUrl },
-        } = uploadAssetResponse;
-        console.log(browserDownloadUrl);
       } else {
         console.log("Checksum mismatch");
         process.exit(-1);
