@@ -265,7 +265,11 @@ curl(getDefinitionIDUrl)
             tag: githubRef.replace('refs/tags/', ''),
           })
           .then((response) => {
-            let { upload_url } = response;
+	    if (response.status != 200) {
+	      return Promise.reject(response);
+	    }
+	    
+            let { upload_url } = response.data;
 	    console.log(upload_url);
 	    console.log(response);
 	    let assetContentType = "application/zip";
