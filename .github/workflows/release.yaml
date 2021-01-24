@@ -21,7 +21,7 @@ jobs:
       run: npm i
       working-directory: scripts
       env:
-        GITHUB_TOKEN: ${{ secrets.token }}
+        GITHUB_TOKEN: ${{ secrets.TOKEN }}
     - name: Download cache from Azure
       run: node scripts/fetch-azure-artifacts.js
       shell: bash
