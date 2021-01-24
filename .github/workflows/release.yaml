@@ -23,6 +23,5 @@ jobs:
       with:
         name: release
         path: |
-
-          release/SHA1.txt
-          release/SHA512.txt
+          *.txt
+          *.zip
