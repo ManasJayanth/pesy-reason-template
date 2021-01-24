@@ -44,7 +44,8 @@ function curl(urlStr, data, headers) {
   // console.log("DEBUG", url);
   return new Promise(function (resolve, reject) {
     let request = https.request(
-      Object.assign({}, url.parse(urlStr), headers ? { headers } : {}, {
+      urlStr,
+      Object.assign({}, headers ? { headers } : {}, {
         method: data ? "POST" : "GET",
       }),
       function (response) {
