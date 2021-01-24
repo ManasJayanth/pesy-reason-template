@@ -272,25 +272,35 @@ curl(getDefinitionIDUrl)
             let { upload_url } = response.data;
 	    console.log(upload_url);
 	    console.log(response);
-	    let assetContentType = "text/plain";
-	    let assetPath = `${artChecksum}.txt`;
 	    const contentLength = filePath => fs.statSync(filePath).size;
-	    const headers = { 'content-type': assetContentType, 'content-length': contentLength(assetPath) };
+	    const checksumFileHeaders = { 'content-type':  "text/plain", 'content-length': contentLength( `${artChecksum}.txt`) };
+	    const artFileHeaders = { 'content-type':  "application/zip", 'content-length': contentLength( `${artName}.zip`) };
+	    const artFileName = artName;
+	    const checksumFileName = artChecksum;
+	    const checksumFileData = fs.readFileSync(`${artChecksum}.txt`);
+	    const artFileData = fs.readFileSync(`${artName}.zip`);
             console.log("Uploading...");
-            return octokit.repos
+	    let upload = (upload_url, headers, name, data) =>
+             octokit.repos
               .uploadReleaseAsset({
                 url: upload_url,
                 headers,
-                name: artChecksum,
-                data: fs.readFileSync(`${artChecksum}.txt`),
-              })
-              .then((uploadAssetResponse) => {
+                name,
+                data
+              });
+	    
+            return Promise.all([upload(upload_url, checksumFileHeaders, checksumFileName, checksumFileData).then((uploadAssetResponse) => {
                 const {
                   data: { browser_download_url: browserDownloadUrl },
                 } = uploadAssetResponse;
                 console.log(browserDownloadUrl);
-              });
-          });
+            }), upload(upload_url, artFileHeaders, artFileName, artFileData).then((uploadAssetResponse) => {
+                const {
+                  data: { browser_download_url: browserDownloadUrl },
+                } = uploadAssetResponse;
+              console.log(browserDownloadUrl); })])
+	  });
+         
       } else {
         console.log("Checksum mismatch");
         process.exit(-1);
